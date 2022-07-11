@@ -36,6 +36,7 @@ import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.FuzzyQuery;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.MatchNoDocsQuery;
 import org.apache.lucene.search.PhraseQuery;
@@ -79,6 +80,14 @@ public class TestSimpleQueryParser extends LuceneTestCase {
     Query expected = new TermQuery(new Term("field", "foobar"));
 
     assertEquals(expected, parse("foobar"));
+  }
+
+  public void testSimpleQueryParserWithTooManyClauses() {
+    StringBuilder queryString = new StringBuilder("foo");
+    for (int i = 0; i < 1024; i++) {
+      queryString.append(" | bar").append(i).append(" + baz");
+    }
+    expectThrows(IndexSearcher.TooManyClauses.class, () -> parse(queryString.toString()));
   }
 
   /** test a fuzzy query */

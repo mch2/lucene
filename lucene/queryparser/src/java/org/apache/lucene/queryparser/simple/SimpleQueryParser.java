@@ -24,6 +24,7 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.FuzzyQuery;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.MatchNoDocsQuery;
 import org.apache.lucene.search.PrefixQuery;
@@ -469,6 +470,10 @@ public class SimpleQueryParser extends QueryBuilder {
 
         // reset all of the state for reuse
         state.top = addClause((BooleanQuery) state.top, branch, state.currentOperation);
+        state.nestedClauseCount++;
+        if (state.nestedClauseCount >= IndexSearcher.getMaxClauseCount()) {
+          throw new IndexSearcher.TooManyClauses();
+        }
         state.previousOperation = state.currentOperation;
       }
 
@@ -634,6 +639,7 @@ public class SimpleQueryParser extends QueryBuilder {
     final char[] buffer; // a temporary buffer used to reduce necessary allocations
     int index;
     int length;
+    int nestedClauseCount;
 
     BooleanClause.Occur currentOperation;
     BooleanClause.Occur previousOperation;
